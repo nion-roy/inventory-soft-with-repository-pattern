@@ -82,59 +82,81 @@ class Cart extends Model
 
 
 
-
-  public static function orderCart($requestData)
+  public static function productFilterCart($requestData)
   {
-    // Create a new order instance
-    $order = new Order();
-    $order->user_id = Auth::id();
-    $order->customer_id = $requestData['customer_id'];
-    $order->order_number = getOrderCode();
-    $order->total_amount = $requestData['total_amount'];
-    $order->payment_amount = $requestData['paying_amount'];
-    $order->due_amount = $requestData['due_amount'];
-    $order->payment_type = $requestData['payment_type'];
-    $order->payment_note = $requestData['payment_note'];
-    $order->sale_note = $requestData['sale_note'];
-    $order->save();
+    $products = Product::query();
 
-    $paymentHistory = new PaymentHistory();
-    $paymentHistory->user_id = Auth::id();
-    $paymentHistory->customer_id = $requestData['customer_id'];
-    $paymentHistory->order_id = $order->id;
-    $paymentHistory->total_amount = $requestData['total_amount'];
-    $paymentHistory->payment_amount = $requestData['paying_amount'];
-    $paymentHistory->due_amount = $requestData['due_amount'];
-    $paymentHistory->payment_type = $requestData['payment_type'];
-    $paymentHistory->payment_note = $requestData['payment_note'];
-    $paymentHistory->sale_note = $requestData['sale_note'];
-    $paymentHistory->save();
-
-    // Retrieve all items in the cart
-    $carts = Cart::all();
-
-    // Iterate through each cart item and create order details
-    foreach ($carts as $cart) {
-      $orderDetails = new OrderDetails();
-      $orderDetails->user_id = $order->user_id;
-      $orderDetails->order_id = $order->id;
-      $orderDetails->product_id = $cart->product_id;
-      $orderDetails->quantity = $cart->quantity;
-      $orderDetails->price = $cart->price;
-      $orderDetails->discount_type = $cart->discount_type;
-      $orderDetails->discount_price = $cart->discount_price;
-      $orderDetails->tax = $cart->tax;
-      $orderDetails->shipping_type = $cart->shipping_type;
-      $orderDetails->shipping_charge = $cart->shipping_charge;
-      $orderDetails->save();
-
-      $product = Product::findOrFail($orderDetails->product_id);
-      $product->stock = $product->stock - $orderDetails->quantity;
-      $product->save();
+    if ($requestData['search']) {
+      $products = $products->where('product_name', 'like', '%' . $requestData['search'] . '%');
     }
 
-    // Clear the cart after completing the order
-    Cart::truncate();
-    return $product;
+    if ($requestData['category']) {
+      $products = $products->where('category_id', $requestData['category']);
+    }
+
+    if ($requestData['brand']) {
+      $products = $products->where('brand_id', $requestData['brand']);
+    }
+
+    $products = $products->latest()->get();
+    return $products;
+  }
+
+
+
+  public static function taxToCart($requestData)
+  {
+    $carts = Cart::where('user_id', Auth::id())->get();
+    foreach ($carts as $cart) {
+      $cart->tax = calculateTaxFromPrice($cart->price, $requestData['taxValue']);
+      $cart->save();
+    }
+
+    return $cart;
+  }
+
+
+  public static function discountToCart($requestData)
+  {
+    $carts = Cart::where('user_id', Auth::id())->get();
+    $total = 0;
+
+    // Calculate the total price by summing up the price multiplied by quantity for each cart item
+    foreach ($carts as $cart) {
+      $total += $cart->price * $cart->quantity;
+    }
+    // Iterate through each cart item to apply the discount
+    foreach ($carts as $cart) {
+      $cart->discount_type = $requestData['discountType'];
+      if ($requestData['discountType'] == 'fixed') {
+        $cart->discount_price = $requestData['discountValue'];
+      } elseif ($requestData['discountType'] == 'percentage') {
+        $cart->discount_price = ($requestData['discountValue'] / 100) * $total;
+      } else {
+        $cart->discount_type = 'no discount';
+        $cart->discount_price = 0;
+      }
+      $cart->save();
+    }
+
+    return $cart;
+  }
+
+
+  public static function shippingToCart($requestData)
+  {
+    $carts = Cart::where('user_id', Auth::id())->get();
+
+    foreach ($carts as $cart) {
+      $cart->shipping_type = $requestData['shippingType'];
+      if ($requestData['shippingType'] == 'inside' || $requestData['shippingType'] == 'outside') {
+        $cart->shipping_charge = $requestData['shippingValue'];
+      } else {
+        $cart->shipping_type = 'no shipping';
+        $cart->shipping_charge = 0;
+      }
+      $cart->save();
+    }
+    return $cart;
   }
 }

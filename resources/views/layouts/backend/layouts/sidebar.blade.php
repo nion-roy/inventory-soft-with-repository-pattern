@@ -204,6 +204,13 @@
 				</div>
 			</li>
 
+			<li class="menu-item">
+				<a href="{{ route('clearCache') }}" class="menu-link waves-effect waves-light">
+					<span class="menu-icon"><i class="bx bx-refresh"></i></span>
+					<span class="menu-text"> Cache Clear </span>
+				</a>
+			</li>
+
 
 
 			<li class="menu-item">

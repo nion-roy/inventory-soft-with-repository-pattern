@@ -18,7 +18,6 @@ class ProductController extends Controller
     $this->productRepository = $productRepository;
   }
 
-
   /**
    * Display a listing of the resource.
    */
@@ -44,14 +43,6 @@ class ProductController extends Controller
   {
     $this->productRepository->create($request->validated());
     return redirect()->back()->with('success', 'Product added successfull.');
-  }
-
-  /**
-   * Display the specified resource.
-   */
-  public function show(string $id)
-  {
-    //
   }
 
   /**

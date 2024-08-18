@@ -26,14 +26,6 @@ class TaxController extends Controller
   }
 
   /**
-   * Show the form for creating a new resource.
-   */
-  public function create()
-  {
-    //
-  }
-
-  /**
    * Store a newly created resource in storage.
    */
   public function store(TaxRequest $request)
@@ -41,14 +33,6 @@ class TaxController extends Controller
     $this->taxRepository->create($request->validated());
     session()->flash('success', 'Tax added successfully.');
     return response()->json(['redirect' => route('admin.tax.index')]);
-  }
-
-  /**
-   * Display the specified resource.
-   */
-  public function show(string $id)
-  {
-    //
   }
 
   /**

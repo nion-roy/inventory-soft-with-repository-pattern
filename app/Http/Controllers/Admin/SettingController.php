@@ -15,7 +15,6 @@ class SettingController extends Controller
   }
 
 
-
   public function users()
   {
     $users = User::all();

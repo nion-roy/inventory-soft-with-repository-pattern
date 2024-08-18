@@ -7,6 +7,7 @@ use App\Repositories\CartRepository;
 use App\Repositories\UserRepository;
 use Illuminate\Pagination\Paginator;
 use App\Repositories\BrandRepository;
+use App\Repositories\OrderRepository;
 use App\Repositories\ProductRepository;
 use Illuminate\Support\ServiceProvider;
 use App\Repositories\CategoryRepository;
@@ -16,6 +17,7 @@ use App\Repositories\Interfaces\TaxRepositoryInterface;
 use App\Repositories\Interfaces\CartRepositoryInterface;
 use App\Repositories\Interfaces\UserRepositoryInterface;
 use App\Repositories\Interfaces\BrandRepositoryInterface;
+use App\Repositories\Interfaces\OrderRepositoryInterface;
 use App\Repositories\Interfaces\ProductRepositoryInterface;
 use App\Repositories\Interfaces\CategoryRepositoryInterface;
 use App\Repositories\Interfaces\CustomerRepositoryInterface;
@@ -36,6 +38,7 @@ class AppServiceProvider extends ServiceProvider
     $this->app->bind(TaxRepositoryInterface::class, TaxRepository::class);
     $this->app->bind(PaymentMethodRepositoryInterface::class, PaymentMethodRepository::class);
     $this->app->bind(CartRepositoryInterface::class, CartRepository::class);
+    $this->app->bind(OrderRepositoryInterface::class, OrderRepository::class);
   }
 
   /**

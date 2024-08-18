@@ -10,5 +10,9 @@ interface CartRepositoryInterface
   public function incrementQuantity(int $id);
   public function decrementQuantity(int $id);
   public function manualQuantity(int $id, array $data); 
-  public function orderProduct(array $data); 
+  public function orderProduct(array $data);
+  public function productFilter(array $data);
+  public function taxCart(array $data);
+  public function discountCart(array $data);
+  public function shippingCart(array $data);
 }

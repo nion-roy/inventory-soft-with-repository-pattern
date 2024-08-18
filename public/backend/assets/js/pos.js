@@ -267,8 +267,13 @@ $(document).ready(function () {
                 type: "POST",
                 data: formData,
                 success: function (response) {
-                    // alert("Order successful!"); .
                     window.location.href = response.redirect_url;
+                    if (response.success) {
+                        localStorage.setItem(
+                            "successMessage",
+                            "Order create successfully."
+                        );
+                    }
                 },
                 error: function (xhr, status, error) {
                     var errors = xhr.responseJSON;

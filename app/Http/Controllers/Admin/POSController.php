@@ -16,7 +16,6 @@ use Illuminate\Support\Facades\Auth;
 
 class POSController extends Controller
 {
-
   protected $cartRepository;
 
   public function __construct(CartRepositoryInterface $cartRepository)
@@ -39,28 +38,11 @@ class POSController extends Controller
     return view('admin.pos.index', compact('customers', 'products', 'categories', 'brands', 'payments', 'taxes'));
   }
 
-
   public function filterProducts(Request $request)
   {
-    $products = Product::query();
-
-    if ($request->search) {
-      $products = $products->where('product_name', 'like', '%' . $request->search . '%');
-    }
-
-    if ($request->category) {
-      $products = $products->where('category_id', $request->category);
-    }
-
-    if ($request->brand) {
-      $products = $products->where('brand_id', $request->brand);
-    }
-
-    $products = $products->latest()->get();
-
+    $products = $this->cartRepository->productFilter($request->all());
     return view('admin.pos.render_product', compact('products'))->render();
   }
-
 
   public function addToCart(Request $request)
   {
@@ -93,7 +75,6 @@ class POSController extends Controller
     return response()->json(['html' => $view, 'subTotal' => $subTotal, 'quantity' => $quantity, 'total' => $total, 'tax' => $tax, 'discount' => $discount, 'shipping' => $shipping]);
   }
 
-
   public function removeToCart(String $id)
   {
     $this->cartRepository->destroy($id);
@@ -119,8 +100,6 @@ class POSController extends Controller
     return response()->json(['success' => true]);
   }
 
-
-
   public function resetToCart()
   {
     Cart::truncate();
@@ -129,57 +108,19 @@ class POSController extends Controller
 
   public function taxToCart(Request $request)
   {
-    $carts = Cart::where('user_id', Auth::id())->get();
-    foreach ($carts as $cart) {
-      $cart->tax = calculateTaxFromPrice($cart->price, $request->taxValue);
-      $cart->save();
-    }
+    $this->cartRepository->taxCart($request->all());
     return response()->json(['successMsg' => 'Tax add to product successfully']);
   }
 
-
   public function discountToCart(Request $request)
   {
-    $carts = Cart::where('user_id', Auth::id())->get();
-    $total = 0;
-
-    // Calculate the total price by summing up the price multiplied by quantity for each cart item
-    foreach ($carts as $cart) {
-      $total += $cart->price * $cart->quantity;
-    }
-    // Iterate through each cart item to apply the discount
-    foreach ($carts as $cart) {
-      $cart->discount_type = $request->discountType;
-      if ($request->discountType == 'fixed') {
-        $cart->discount_price = $request->discountValue;
-      } elseif ($request->discountType == 'percentage') {
-        $cart->discount_price = ($request->discountValue / 100) * $total;
-      } else {
-        $cart->discount_type = 'no discount';
-        $cart->discount_price = 0;
-      }
-      $cart->save();
-    }
-
+    $this->cartRepository->discountCart($request->all());
     return response()->json(['successMsg' => 'Discount price added successfully']);
   }
-
-
-
+  
   public function shippingToCart(Request $request)
   {
-    $carts = Cart::where('user_id', Auth::id())->get();
-
-    foreach ($carts as $cart) {
-      $cart->shipping_type = $request->shippingType;
-      if ($request->shippingType == 'inside' || $request->shippingType == 'outside') {
-        $cart->shipping_charge = $request->shippingValue;
-      } else {
-        $cart->shipping_type = 'no shipping';
-        $cart->shipping_charge = 0;
-      }
-      $cart->save();
-    }
+    $this->cartRepository->shippingCart($request->all());
     return response()->json(['successMsg' => 'Shipping charge add to successfully']);
   }
 }

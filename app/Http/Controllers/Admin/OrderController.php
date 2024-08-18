@@ -2,83 +2,67 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Models\Order;
 use Illuminate\Http\Request;
 use App\Models\PaymentMethod;
-use App\Models\PaymentHistory;
 use App\Http\Requests\OrderRequest;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Auth;
-use App\Repositories\Interfaces\CartRepositoryInterface;
+use App\Repositories\Interfaces\OrderRepositoryInterface;
 
 class OrderController extends Controller
 {
 
-  protected $cartRepository;
+  protected $orderRepository;
 
-  public function __construct(CartRepositoryInterface $cartRepository)
+  public function __construct(OrderRepositoryInterface $orderRepository)
   {
-    $this->cartRepository = $cartRepository;
+    $this->orderRepository = $orderRepository;
   }
 
   public function index()
   {
-    $orders = Order::latest('id')->paginate(10);
+    $orders = $this->orderRepository->getAll();
     $payments = PaymentMethod::active()->orderByRaw('id')->get();
     return view('admin.order.index', compact('orders', 'payments'));
   }
+
   public function order(Request $request)
   {
-    $this->cartRepository->orderProduct($request->all());
+    $this->orderRepository->orderProduct($request->all());
     return response()->json(['success' => true, 'redirect_url' => route('admin.order.index')]);
-  }
-
-
-  public function paymentHistory(string $id)
-  {
-    $paymentHistories = PaymentHistory::with('user')->where('order_id', $id)->latest('id')->get();
-    return response()->json($paymentHistories);
-  }
-
-  public function paymentAdd(string $id, OrderRequest $request)
-  {
-    $newPayment = new PaymentHistory();
-    $newPayment->user_id = Auth::id();
-    $newPayment->customer_id = 10;
-    $newPayment->order_id = $id;
-    $newPayment->total_amount = $request->total_amount;
-    $newPayment->payment_amount = $request->paying_amount;
-    $newPayment->due_amount = $request->due_amount;
-    $newPayment->payment_type = $request->payment_type;
-    $newPayment->payment_note = $request->payment_note;
-    $newPayment->sale_note = $request->sale_note;
-    $newPayment->save();
-
-    $orderPaymentUpdate = Order::where('id', $id)->first();
-    $orderPaymentUpdate->user_id = Auth::id();
-    $orderPaymentUpdate->total_amount = $request->total_amount;
-    $orderPaymentUpdate->payment_amount = $request->paying_amount;
-    $orderPaymentUpdate->due_amount = $request->due_amount;
-    $orderPaymentUpdate->payment_type = $request->payment_type;
-    $orderPaymentUpdate->payment_note = $request->payment_note;
-    $orderPaymentUpdate->sale_note = $request->sale_note;
-    $orderPaymentUpdate->update();
-  }
-
-
-  public function paymentDestroy(string $id)
-  {
-    PaymentHistory::findOrFail($id)->delete();
   }
 
   public function view(string $id)
   {
-    $order =  Order::with('user')->with('payment')->findOrFail($id);
+    $order = $this->orderRepository->show($id);
     return view('admin.order.view', compact('order'));
   }
+
   public function destroy(string $id)
   {
-    Order::findOrFail($id)->delete();
+    $this->orderRepository->destroy($id);
     return redirect()->back()->with('success', 'Order deleted successfully.');
+  }
+
+  public function paymentAdd(string $id, OrderRequest $request)
+  {
+    $this->orderRepository->newPaymentAdd($id, $request->validated());
+  }
+
+  public function paymentHistory(string $id)
+  {
+    $paymentHistories = $this->orderRepository->paymentHistroyShow($id);
+    $data = view('admin.order.__payment_history', compact('paymentHistories'))->render();
+    return response()->json(['paymentHistories' => $data]);
+  }
+
+  public function singlePaymentHistory(string $id)
+  {
+    $historyLatest = $this->orderRepository->singlePaymentHistory($id);
+    return response()->json(['historyLatest' => $historyLatest]);
+  }
+
+  public function paymentDestroy(string $id)
+  {
+    $this->orderRepository->paymentHistoryDestroy($id);
   }
 }

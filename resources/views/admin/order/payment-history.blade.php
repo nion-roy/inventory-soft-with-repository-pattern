@@ -16,10 +16,12 @@
 							<th>Payment Amount</th>
 							<th>Due Amount</th>
 							<th>Received By</th>
-              <th>Action</th>
+							<th>Action</th>
 						</tr>
 					</thead>
-					<tbody></tbody>
+					<tbody id="payment__history__list">
+						<!-- Payment history will be loaded here via AJAX -->
+					</tbody>
 				</table>
 			</div>
 			<div class="modal-footer border-0 mx-auto">
@@ -30,5 +32,3 @@
 	</div>
 </div>
 <!-- Payment History Modal -->
-
-

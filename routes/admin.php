@@ -36,6 +36,7 @@ Route::group(['as' => 'admin.', 'prefix' => 'admin', 'middleware' => ['auth', 'a
   Route::get('order/{id}/view', [App\Http\Controllers\Admin\OrderController::class, 'view'])->name('order.view');
   Route::delete('order/destroy/{id}', [App\Http\Controllers\Admin\OrderController::class, 'destroy'])->name('order.destroy');
   Route::get('payment-history/{id}', [App\Http\Controllers\Admin\OrderController::class, 'paymentHistory'])->name('payment.history');
+  Route::get('payment-history-order/{id}', [App\Http\Controllers\Admin\OrderController::class, 'singlePaymentHistory'])->name('payment.single.history');
   Route::post('payment-add/{id}', [App\Http\Controllers\Admin\OrderController::class, 'paymentAdd'])->name('payment.add');
   Route::get('payment-history-delete/{id}', [App\Http\Controllers\Admin\OrderController::class, 'paymentDestroy'])->name('payment.destroy');
 
